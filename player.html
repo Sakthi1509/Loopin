@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Loopin - Now Playing</title>
+
+  <!-- Tailwind CSS for modern styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
+  
+  <style>
+    /* Custom CSS variables for a Spotify-like theme */
+    :root {
+      --primary-color: #1db954;
+      --dark-bg: #121212;
+      --card-bg: #181818;
+      --text-light: #ffffff;
+      --text-muted: #b3b3b3;
+      --hover-light: #282828;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--dark-bg);
+      color: var(--text-light);
+    }
+
+    /* Styling for the main player container */
+    .player-container {
+      background-color: var(--card-bg);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Styling for the album art image */
+    .album-art img {
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .song-title {
+      font-weight: 700;
+    }
+
+    .artist-name {
+      color: var(--text-muted);
+    }
+    
+    /* Custom progress bar styling */
+    .progress-bar-container {
+      background-color: #535353;
+      cursor: pointer;
+    }
+
+    .progress-bar-fill {
+      background-color: var(--primary-color);
+      transition: width 0.1s linear;
+    }
+
+    .time-display {
+      color: var(--text-muted);
+    }
+    
+    /* Control button styling */
+    .btn-control {
+      background-color: transparent;
+      border: 1px solid var(--text-muted);
+      color: var(--text-light);
+      transition: all 0.2s ease;
+    }
+    .btn-control:hover {
+        background-color: var(--hover-light);
+        transform: scale(1.1);
+    }
+
+    .btn-play {
+      background-color: var(--primary-color);
+      border: none;
+    }
+    .btn-play:hover {
+      background-color: #1ed760;
+    }
+
+    /* Active state for like and shuffle buttons */
+    .btn-like.active, #shuffleBtn.active {
+      color: var(--primary-color);
+      border-color: var(--primary-color);
+    }
+
+    .btn-like.active i {
+        font-weight: bold; /* Fills the heart icon */
+    }
+
+  </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+        
+  <div class="player-container text-center rounded-xl p-6 md:p-8 w-full max-w-md mx-4">
+    <h1 class="text-2xl font-bold mb-4"> Now Playing 🎵</h1>
+    
+    <div class="album-art mx-auto mb-6">
+      <img src="https://placehold.co/300x300/181818/ffffff?text=Loopin" alt="Album Art" id="albumArt" class="w-full h-auto rounded-lg object-cover">
+    </div>
+    
+    <h2 class="song-title text-xl truncate" id="songTitle">Loading...</h2>
+    <p class="artist-name mb-4" id="artistName">Unknown Artist</p>
+    
+    <!-- Custom Progress Bar -->
+    <div class="progress-container w-full my-4">
+      <div class="progress-bar-container h-1.5 rounded-full" id="progressBarContainer">
+        <div class="progress-bar-fill h-full rounded-full" id="progress" style="width: 0%;"></div>
+      </div>
+      <div class="time-display flex justify-between text-xs mt-1">
+        <span id="currentTime">0:00</span>
+        <span id="duration">0:00</span>
+      </div>
+    </div>
+    
+    <!-- Hidden audio element -->
+    <audio id="audioPlayer" class="hidden"></audio>
+    
+    <!-- Player Controls -->
+    <div class="controls flex items-center justify-center gap-4 my-5">
+      <button class="btn-control w-12 h-12 rounded-full flex items-center justify-center" id="shuffleBtn" title="Toggle Shuffle">
+        <i class="bi bi-shuffle text-xl"></i>
+      </button>
+      <button class="btn-control w-12 h-12 rounded-full flex items-center justify-center" id="prevBtn" title="Previous">
+        <i class="bi bi-skip-start-fill text-2xl"></i>
+      </button>
+      <button class="btn-play w-16 h-16 rounded-full flex items-center justify-center text-black" id="playBtn" title="Play/Pause">
+        <i id="playIcon" class="bi bi-play-fill text-4xl"></i>
+      </button>
+      <button class="btn-control w-12 h-12 rounded-full flex items-center justify-center" id="nextBtn" title="Next">
+        <i class="bi bi-skip-end-fill text-2xl"></i>
+      </button>
+      <button class="btn-control btn-like w-12 h-12 rounded-full flex items-center justify-center" id="likeBtn" title="Like">
+        <i id="likeIcon" class="bi bi-heart text-xl"></i>
+      </button>
+    </div>
+    
+    
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // --- DOM Elements ---
+      const audio = document.getElementById('audioPlayer');
+      const songTitleEl = document.getElementById('songTitle');
+      const artistNameEl = document.getElementById('artistName');
+      const albumArtEl = document.getElementById('albumArt');
+      const playBtn = document.getElementById('playBtn');
+      const playIcon = document.getElementById('playIcon');
+      const likeBtn = document.getElementById('likeBtn');
+      const likeIcon = document.getElementById('likeIcon');
+      const shuffleBtn = document.getElementById('shuffleBtn');
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const progress = document.getElementById('progress');
+      const progressBarContainer = document.getElementById('progressBarContainer');
+      const currentTimeDisplay = document.getElementById('currentTime');
+      const durationDisplay = document.getElementById('duration');
+
+      // --- DB Setup ---
+      const DB_NAME = 'LoopinSongDB';
+      const STORE_NAME = 'songs';
+      let db;
+      let songQueue = [];
+      let currentIndex = 0;
+      let isPlaying = false;
+      let isShuffle = localStorage.getItem('isShuffle') === 'true';
+
+      // Initialize IndexedDB
+      function initDB() {
+        return new Promise((resolve, reject) => {
+          const request = indexedDB.open(DB_NAME, 1);
+          
+          request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+              db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+            }
+          };
+          
+          request.onsuccess = (event) => {
+            db = event.target.result;
+            resolve(db);
+          };
+          
+          request.onerror = (event) => {
+            reject('Error opening database');
+          };
+        });
+      }
+
+      // Get a song from IndexedDB
+      function getSongFromDB(id) {
+        return new Promise((resolve, reject) => {
+          const transaction = db.transaction([STORE_NAME], 'readonly');
+          const store = transaction.objectStore(STORE_NAME);
+          const request = store.get(id);
+          
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject('Error getting song');
+        });
+      }
+
+      // Get all songs from IndexedDB
+      function getAllSongsFromDB() {
+        return new Promise((resolve, reject) => {
+          const transaction = db.transaction([STORE_NAME], 'readonly');
+          const store = transaction.objectStore(STORE_NAME);
+          const request = store.getAll();
+          
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject('Error getting songs');
+        });
+      }
+
+      // Load song data into the player
+      async function loadSong(song) {
+        if (!song) {
+          songTitleEl.textContent = 'No song available';
+          artistNameEl.textContent = 'Please add songs to your library';
+          return;
+        }
+
+        const songData = await getSongFromDB(song.id);
+        if (!songData) return;
+
+        songTitleEl.textContent = song.name;
+        artistNameEl.textContent = song.artist || 'Unknown Artist';
+        albumArtEl.src = song.cover || 'https://placehold.co/300x300/181818/ffffff?text=Loopin';
+        document.title = `${song.name} - ${song.artist}`;
+
+        // Create object URL for the audio file
+        if (songData.file) {
+          if (audio.src) {
+            URL.revokeObjectURL(audio.src); // Clean up previous object URL
+          }
+          audio.src = URL.createObjectURL(songData.file);
+        }
+
+        updateLikeStatus(song.id);
+      }
+
+      // Play the current song
+      function playSong() {
+        if (songQueue.length === 0) return;
+        
+        isPlaying = true;
+        playIcon.classList.replace('bi-play-fill', 'bi-pause-fill');
+        playBtn.title = "Pause";
+        audio.play().catch(error => console.error("Playback failed:", error));
+      }
+
+      // Pause the current song
+      function pauseSong() {
+        isPlaying = false;
+        playIcon.classList.replace('bi-pause-fill', 'bi-play-fill');
+        playBtn.title = "Play";
+        audio.pause();
+      }
+
+      // Toggle between play and pause
+      function togglePlay() {
+        if (isPlaying) {
+          pauseSong();
+        } else {
+          playSong();
+        }
+      }
+      
+      // Go to the next song
+      async function nextSong() {
+        if (songQueue.length === 0) return;
+
+        if (isShuffle) {
+          let nextIndex;
+          if (songQueue.length === 1) {
+            nextIndex = 0;
+          } else {
+            do {
+              nextIndex = Math.floor(Math.random() * songQueue.length);
+            } while (nextIndex === currentIndex);
+          }
+          currentIndex = nextIndex;
+        } else {
+          currentIndex = (currentIndex + 1) % songQueue.length;
+        }
+
+        localStorage.setItem('selectedSongId', songQueue[currentIndex].id);
+        await loadSong(songQueue[currentIndex]);
+        playSong();
+      }
+      
+      // Go to the previous song
+      async function previousSong() {
+        if (songQueue.length === 0) return;
+        
+        // If more than 3 seconds into the song, restart it
+        if (audio.currentTime > 3) {
+          audio.currentTime = 0;
+          return;
+        }
+        
+        // Otherwise, go to the previous track
+        currentIndex = (currentIndex - 1 + songQueue.length) % songQueue.length;
+        localStorage.setItem('selectedSongId', songQueue[currentIndex].id);
+        await loadSong(songQueue[currentIndex]);
+        playSong();
+      }
+
+      // Toggle like status for a song
+      function toggleLike() {
+        if (songQueue.length === 0 || !songQueue[currentIndex]) return;
+        
+        const likedSongs = JSON.parse(localStorage.getItem('likedSongs') || '[]');
+        const songId = songQueue[currentIndex].id;
+        
+        const songIndex = likedSongs.indexOf(songId);
+        if (songIndex > -1) {
+          likedSongs.splice(songIndex, 1);
+        } else {
+          likedSongs.push(songId);
+        }
+        
+        localStorage.setItem('likedSongs', JSON.stringify(likedSongs));
+        updateLikeStatus(songId);
+      }
+
+      // Update the visual state of the like button
+      function updateLikeStatus(songId) {
+        const likedSongs = JSON.parse(localStorage.getItem('likedSongs') || '[]');
+        if (likedSongs.includes(songId)) {
+          likeIcon.classList.replace('bi-heart', 'bi-heart-fill');
+          likeBtn.classList.add('active');
+        } else {
+          likeIcon.classList.replace('bi-heart-fill', 'bi-heart');
+          likeBtn.classList.remove('active');
+        }
+      }
+
+      // Toggle shuffle mode
+      function toggleShuffle() {
+        isShuffle = !isShuffle;
+        shuffleBtn.classList.toggle('active', isShuffle);
+        localStorage.setItem('isShuffle', isShuffle);
+      }
+      
+      // Update the progress bar as the song plays
+      function updateProgress(e) {
+        const { duration, currentTime } = e.target;
+        if (duration) {
+          const progressPercent = (currentTime / duration) * 100;
+          progress.style.width = `${progressPercent}%`;
+          currentTimeDisplay.textContent = formatTime(currentTime);
+        }
+      }
+
+      // Set the song's current time when progress bar is clicked
+      function setProgress(e) {
+        const width = this.clientWidth;
+        const clickX = e.offsetX;
+        const duration = audio.duration;
+        if(duration) {
+            audio.currentTime = (clickX / width) * duration;
+        }
+      }
+      
+      // Update the total duration display
+      function updateDuration() {
+         if (audio.duration) {
+            durationDisplay.textContent = formatTime(audio.duration);
+         }
+      }
+
+      // Format time from seconds to a MM:SS format
+      function formatTime(seconds) {
+        if (isNaN(seconds)) return '0:00';
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+      }
+
+      // --- Event Listeners ---
+      playBtn.addEventListener('click', togglePlay);
+      nextBtn.addEventListener('click', nextSong);
+      prevBtn.addEventListener('click', previousSong);
+      likeBtn.addEventListener('click', toggleLike);
+      shuffleBtn.addEventListener('click', toggleShuffle);
+      
+      audio.addEventListener('timeupdate', updateProgress);
+      audio.addEventListener('ended', nextSong);
+      audio.addEventListener('loadedmetadata', updateDuration);
+      progressBarContainer.addEventListener('click', setProgress);
+      
+      // Keyboard shortcuts for accessibility
+      document.addEventListener('keydown', function(e) {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        switch(e.code) {
+          case 'Space':
+            e.preventDefault();
+            togglePlay();
+            break;
+          case 'ArrowRight':
+            nextSong();
+            break;
+          case 'ArrowLeft':
+            previousSong();
+            break;
+          case 'KeyL':
+            toggleLike();
+            break;
+          case 'KeyS':
+            toggleShuffle();
+            break;
+        }
+      });
+      
+      // --- Initialisation ---
+      (async function initializePlayer() {
+        try {
+          await initDB();
+          
+          // Load song queue from localStorage or get all songs from DB
+          const storedQueue = JSON.parse(localStorage.getItem('songQueue'));
+          if (storedQueue && storedQueue.length > 0) {
+            songQueue = storedQueue;
+          } else {
+            songQueue = await getAllSongsFromDB();
+            localStorage.setItem('songQueue', JSON.stringify(songQueue));
+          }
+          
+          // Find current song index
+          const selectedSongId = localStorage.getItem('selectedSongId');
+          if (selectedSongId) {
+            currentIndex = songQueue.findIndex(song => song.id === selectedSongId);
+            if (currentIndex === -1) currentIndex = 0;
+          }
+          
+          // Load the current song
+          if (songQueue.length > 0) {
+            await loadSong(songQueue[currentIndex]);
+          } else {
+            songTitleEl.textContent = 'No songs available';
+            artistNameEl.textContent = 'Add songs to your library';
+          }
+          
+          // Set shuffle state
+          if (isShuffle) {
+            shuffleBtn.classList.add('active');
+          }
+        } catch (error) {
+          console.error('Initialization error:', error);
+          songTitleEl.textContent = 'Error loading player';
+          artistNameEl.textContent = 'Please try again';
+        }
+      })();
+    });
+  </script>
+
+</body>
+</html>

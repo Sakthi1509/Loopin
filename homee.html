@@ -1,0 +1,1543 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Loopin Mobile</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+    <style>
+        :root {
+            --primary-bg: #121212;
+            --secondary-bg: #181818;
+            --highlight: #1db954;
+            --highlight-hover: #1ed760;
+            --text-primary: #ffffff;
+            --text-secondary: #b3b3b3;
+            --player-height: 70px;
+            --navbar-height: 60px;
+            --bottom-nav-height: 60px;
+        }
+
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        /* Mobile Layout */
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Navbar */
+        .navbar {
+            height: var(--navbar-height);
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 0 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+            flex-shrink: 0;
+        }
+
+        .navbar-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: calc(var(--player-height) + var(--bottom-nav-height));
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0%;
+            left: 0;
+            right: 0;
+            height: var(--bottom-nav-height);
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 90;
+            border-top: 1px solid #282828;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 0;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.7rem;
+            flex: 1;
+        }
+
+        .nav-item.active {
+            color: var(--text-primary);
+        }
+
+        .nav-item i {
+            font-size: 1.3rem;
+            margin-bottom: 3px;
+        }
+
+        /* Now Playing Bar */
+        .now-playing-bar {
+            position: fixed;
+            bottom: 8%;
+            left: 0;
+            right: 0;
+            height: var(--player-height);
+            background: linear-gradient(90deg, #1a1a1a, #2d2d2d);
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            z-index: 100;
+            border-top: 1px solid #282828;
+        }
+
+        .now-playing-info {
+            flex: 1;
+            overflow: hidden;
+            padding-right: 15px;
+        }
+
+        .now-playing-title {
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .now-playing-artist {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .now-playing-controls {
+            display: flex;
+            align-items: center;
+        }
+
+        /* Song List */
+        .song-list {
+            padding: 10px 0;
+        }
+
+        .song-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            transition: background-color 0.2s;
+        }
+
+        .song-item:active {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .song-number {
+            width: 30px;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .song-info {
+            flex: 1;
+            overflow: hidden;
+            padding-right: 10px;
+        }
+
+        .song-name {
+            font-size: 0.95rem;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .song-artist {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .song-duration {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            margin-right: 15px;
+        }
+
+        .song-actions {
+            display: flex;
+        }
+
+        .like-btn {
+            color: var(--text-secondary);
+            border: none;
+            background: none;
+            padding: 5px;
+        }
+
+        .like-btn.liked {
+            color: #ff2d55;
+        }
+
+        .add-to-playlist-btn {
+            color: var(--text-secondary);
+            border: none;
+            background: none;
+            padding: 5px;
+            margin-right: 5px;
+        }
+
+        .add-to-playlist-btn:active {
+            color: var(--highlight);
+        }
+
+        /* Empty State */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 60vh;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            opacity: 0.5;
+            margin-bottom: 15px;
+        }
+
+        .empty-state h4 {
+            margin-bottom: 5px;
+        }
+
+        .empty-state p {
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        /* Player View (Full Screen) */
+        .player-view {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(180deg, #1a1a1a, #121212);
+            z-index: 200;
+            display: none;
+            flex-direction: column;
+            padding: 20px;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .player-view.show {
+            transform: translateY(0);
+        }
+
+        .player-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .player-close-btn {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+        }
+
+        .player-album-art {
+            width: 80%;
+            max-width: 300px;
+            aspect-ratio: 1/1;
+            margin: 0 auto 30px;
+            background-color: #282828;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .player-album-art i {
+            font-size: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .player-song-info {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .player-song-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .player-song-artist {
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .player-progress {
+            margin-bottom: 30px;
+        }
+
+        .progress-time {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .progress-bar-container {
+            height: 4px;
+            background-color: #535353;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--highlight);
+            width: 0%;
+            border-radius: 2px;
+        }
+
+        .player-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .player-main-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .player-btn {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .player-play-btn {
+            background-color: var(--highlight);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+        }
+
+        /* Modal */
+        .modal-content {
+            background-color: var(--secondary-bg);
+            color: var(--text-primary);
+            border: none;
+        }
+
+        .modal-header {
+            border-bottom: 1px solid #282828;
+        }
+
+        .modal-footer {
+            border-top: 1px solid #282828;
+        }
+
+        /* Playlist Detail View */
+        #playlistDetailView {
+            display: none;
+            padding: 15px;
+        }
+
+        #playlistDetailTitle {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        #backToPlaylistsBtn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .remove-from-playlist-btn {
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .remove-from-playlist-btn:active {
+            opacity: 1;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0% {
+                opacity: 0.8;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.8;
+            }
+        }
+
+        .now-playing-badge {
+            display: inline-block;
+            background-color: var(--highlight);
+            color: white;
+            font-size: 0.6rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 5px;
+            animation: pulse 2s infinite;
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, .3);
+            border-radius: 50%;
+            border-top-color: var(--text-primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .player-btn.active {
+            color: var(--highlight);
+        }
+
+        #searchInput {
+            border-radius: 20px;
+            padding: 10px 15px;
+            border: none;
+            background-color: #282828;
+            color: white;
+        }
+
+        #searchInput::placeholder {
+            color: #b3b3b3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Navbar -->
+        <div class="navbar">
+            <h1 class="navbar-title" id="currentViewTitle">Loopin</h1>
+            <button class="btn btn-success btn-sm" id="loadSongsBtn">
+                <i class="bi bi-folder2-open"></i>
+            </button>
+            <input type="file" id="songPicker" accept="audio/*" multiple hidden />
+        </div>
+        <!-- Main Content -->
+        <div class="main-content" id="mainContent">
+            <!-- All Songs View -->
+            <div class="row justify-content-center my-4">
+                <div class="col-md-8 col-lg-6">
+                    <input type="text" class="form-control" id="searchInput" placeholder="Search songs..." />
+                </div>
+            </div>
+            <div class="song-list" id="allSongsView">
+                <div class="empty-state" id="emptyState">
+                    <i class="bi bi-music-note-beamed"></i>
+                    <h4>No songs loaded</h4>
+                    <p>Add songs to your library</p>
+                    <button class="btn btn-success mt-3" id="loadSongsBtn2">
+                        <i class="bi bi-folder2-open me-2"></i>Load Songs
+                    </button>
+                </div>
+                <div id="songList"></div>
+            </div>
+
+            <!-- Liked Songs View -->
+            <div class="song-list" id="likedSongsView" style="display: none;">
+                <div class="empty-state" id="emptyLikedState">
+                    <i class="bi bi-heart"></i>
+                    <h4>No liked songs</h4>
+                    <p>Like songs to see them here</p>
+                </div>
+                <div id="likedSongsList"></div>
+            </div>
+
+            <!-- Playlists View -->
+            <div id="playlistsView" style="display: none; padding: 15px;">
+                <div class="empty-state" id="emptyPlaylistsState">
+                    <i class="bi bi-music-note-list"></i>
+                    <h4>No playlists</h4>
+                    <p>Create your first playlist</p>
+                    <button class="btn btn-success mt-3" id="createFirstPlaylistBtn">
+                        <i class="bi bi-plus-circle me-2"></i>Create Playlist
+                    </button>
+                </div>
+                <div id="playlistsList"></div>
+            </div>
+
+            <!-- Playlist Detail View -->
+            <div id="playlistDetailView">
+                <div class="d-flex align-items-center mb-3">
+                    <button class="btn btn-link text-light p-0 me-2" id="backToPlaylistsBtn">
+                        <i class="bi bi-arrow-left" style="font-size: 1.2rem;"></i>
+                    </button>
+                    <h4 id="playlistDetailTitle">Playlist</h4>
+                </div>
+
+                <div class="song-list" id="playlistSongsList"></div>
+
+                <div class="empty-state" id="emptyPlaylistState">
+                    <i class="bi bi-music-note-list"></i>
+                    <h4>No songs in this playlist</h4>
+                    <p>Add songs to get started</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <a href="#" class="nav-item active" data-view="all-songs">
+                <i class="bi bi-music-note-list"></i>
+                <span>Songs</span>
+            </a>
+            <a href="#" class="nav-item" data-view="liked-songs">
+                <i class="bi bi-heart"></i>
+                <span>Liked</span>
+            </a>
+            <a href="#" class="nav-item" data-view="playlists">
+                <i class="bi bi-collection"></i>
+                <span>Playlists</span>
+            </a>
+            <a href="home.html" class="nav-item" onclick="window.location.href='home.html'">
+                <i class="bi bi-cloud"></i>
+                <span>online</span>
+            </a>
+        </div>
+
+        <!-- Now Playing Bar -->
+        <div class="now-playing-bar" id="nowPlayingBar" style="display: none;">
+            <div class="now-playing-info" id="nowPlayingInfo">
+                <p class="now-playing-title" id="nowPlayingTitle">Not playing</p>
+                <p class="now-playing-artist" id="nowPlayingArtist">--</p>
+            </div>
+            <div class="now-playing-controls">
+                <button class="btn btn-link text-white p-0" id="playPauseBtn">
+                    <i class="bi bi-play-fill" style="font-size: 1.5rem;"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Full Screen Player -->
+        <div class="player-view" id="playerView">
+            <div class="player-header">
+                <button class="player-close-btn" id="closePlayerBtn">
+                    <i class="bi bi-chevron-down"></i>
+                </button>
+            </div>
+
+            <div class="player-album-art">
+                <i class="bi bi-music-note-beamed"></i>
+            </div>
+
+            <div class="player-song-info">
+                <h2 class="player-song-title" id="playerSongTitle">--</h2>
+                <p class="player-song-artist" id="playerSongArtist">--</p>
+            </div>
+
+            <div class="player-progress">
+                <div class="progress-time">
+                    <span id="currentTime">0:00</span>
+                    <span id="duration">0:00</span>
+                </div>
+                <div class="progress-bar-container" id="progressContainer">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+            </div>
+
+            <div class="player-controls">
+                <button class="player-btn" id="shuffleBtn">
+                    <i class="bi bi-shuffle"></i>
+                </button>
+
+                <div class="player-main-controls">
+                    <button class="player-btn" id="prevBtn">
+                        <i class="bi bi-skip-start-fill"></i>
+                    </button>
+                    <button class="player-play-btn" id="mainPlayBtn">
+                        <i class="bi bi-play-fill"></i>
+                    </button>
+                    <button class="player-btn" id="nextBtn">
+                        <i class="bi bi-skip-end-fill"></i>
+                    </button>
+                </div>
+
+                <button class="player-btn" id="repeatBtn">
+                    <i class="bi bi-arrow-repeat"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Create Playlist Modal -->
+        <div class="modal fade" id="createPlaylistModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">New Playlist</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="playlistName" class="form-label">Playlist Name</label>
+                            <input type="text" class="form-control" id="playlistName" placeholder="My Playlist">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-success" id="createPlaylistBtn">Create</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add to Playlist Modal -->
+        <div class="modal fade" id="addToPlaylistModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add to Playlist</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="playlistSelectionList">
+                            <!-- Playlists will be listed here -->
+                            <div class="text-center py-3" id="noPlaylistsMessage">
+                                <p>No playlists available</p>
+                                <button class="btn btn-success btn-sm" id="createNewPlaylistFromAdd">
+                                    <i class="bi bi-plus-circle"></i> Create New Playlist
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- DB Setup ---
+            const DB_NAME = 'LoopinMobileDB';
+            const STORE_NAME = 'songs';
+            const PLAYLIST_STORE = 'playlists';
+            let db;
+
+            function initDB() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(DB_NAME, 2);
+
+                    request.onupgradeneeded = event => {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains(STORE_NAME)) {
+                            db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                        }
+                        if (!db.objectStoreNames.contains(PLAYLIST_STORE)) {
+                            const playlistsStore = db.createObjectStore(PLAYLIST_STORE, { keyPath: 'id' });
+                            playlistsStore.createIndex('name', 'name', { unique: false });
+                        }
+                    };
+
+                    request.onsuccess = event => {
+                        db = event.target.result;
+                        resolve(db);
+                    };
+
+                    request.onerror = event => reject(event.target.error);
+                });
+            }
+
+            // --- DOM Elements ---
+            const songPicker = document.getElementById('songPicker');
+            const loadSongsBtn = document.getElementById('loadSongsBtn');
+            const loadSongsBtn2 = document.getElementById('loadSongsBtn2');
+            const searchInput = document.getElementById('searchInput');
+            const songListEl = document.getElementById('songList');
+            const likedSongsListEl = document.getElementById('likedSongsList');
+            const emptyState = document.getElementById('emptyState');
+            const emptyLikedState = document.getElementById('emptyLikedState');
+            const emptyPlaylistsState = document.getElementById('emptyPlaylistsState');
+            const nowPlayingBar = document.getElementById('nowPlayingBar');
+            const nowPlayingTitle = document.getElementById('nowPlayingTitle');
+            const nowPlayingArtist = document.getElementById('nowPlayingArtist');
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            const currentViewTitle = document.getElementById('currentViewTitle');
+            const playerView = document.getElementById('playerView');
+            const closePlayerBtn = document.getElementById('closePlayerBtn');
+            const playerSongTitle = document.getElementById('playerSongTitle');
+            const playerSongArtist = document.getElementById('playerSongArtist');
+            const currentTimeEl = document.getElementById('currentTime');
+            const durationEl = document.getElementById('duration');
+            const progressBar = document.getElementById('progressBar');
+            const progressContainer = document.getElementById('progressContainer');
+            const mainPlayBtn = document.getElementById('mainPlayBtn');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const shuffleBtn = document.getElementById('shuffleBtn');
+            const repeatBtn = document.getElementById('repeatBtn');
+            const createPlaylistModal = new bootstrap.Modal(document.getElementById('createPlaylistModal'));
+            const createPlaylistBtn = document.getElementById('createPlaylistBtn');
+            const createFirstPlaylistBtn = document.getElementById('createFirstPlaylistBtn');
+            const playlistNameInput = document.getElementById('playlistName');
+            const playlistsList = document.getElementById('playlistsList');
+            const navItems = document.querySelectorAll('.nav-item');
+            const allSongsView = document.getElementById('allSongsView');
+            const likedSongsView = document.getElementById('likedSongsView');
+            const playlistsView = document.getElementById('playlistsView');
+            const addToPlaylistModal = new bootstrap.Modal(document.getElementById('addToPlaylistModal'));
+            const playlistSelectionList = document.getElementById('playlistSelectionList');
+            const noPlaylistsMessage = document.getElementById('noPlaylistsMessage');
+            const createNewPlaylistFromAdd = document.getElementById('createNewPlaylistFromAdd');
+            const playlistDetailView = document.getElementById('playlistDetailView');
+            const backToPlaylistsBtn = document.getElementById('backToPlaylistsBtn');
+            const playlistDetailTitle = document.getElementById('playlistDetailTitle');
+            const playlistSongsList = document.getElementById('playlistSongsList');
+            const emptyPlaylistState = document.getElementById('emptyPlaylistState');
+
+
+            // --- Player State ---
+            let songs = [];
+            let likedSongs = [];
+            let playlists = [];
+            let currentSongIndex = null;
+            let audio = new Audio();
+            let isPlaying = false;
+            let currentView = 'all-songs';
+            let progressInterval;
+            let currentSongForPlaylist = null;
+            let currentPlaylist = null;
+            let isShuffled = false;
+            let isRepeatOn = false;
+            let originalSongOrder = [];
+
+            // --- Initialize App ---
+            initDB().then(() => {
+                loadSongsFromDB();
+                loadPlaylistsFromDB();
+            });
+
+            // --- Event Listeners ---
+            loadSongsBtn.addEventListener('click', () => songPicker.click());
+            loadSongsBtn2.addEventListener('click', () => songPicker.click());
+            songPicker.addEventListener('change', handleFileSelect);
+            searchInput.addEventListener('input', filterSongs);
+            playPauseBtn.addEventListener('click', togglePlayPause);
+            shuffleBtn.addEventListener('click', toggleShuffle);
+            repeatBtn.addEventListener('click', toggleRepeat);
+            closePlayerBtn.addEventListener('click', closePlayerView);
+            mainPlayBtn.addEventListener('click', togglePlayPause);
+            prevBtn.addEventListener('click', playPrevious);
+            nowPlayingBar.addEventListener('click', openPlayerView);
+            nextBtn.addEventListener('click', playNext);
+            createPlaylistBtn.addEventListener('click', createNewPlaylist);
+            createFirstPlaylistBtn.addEventListener('click', () => createPlaylistModal.show());
+            backToPlaylistsBtn.addEventListener('click', backToPlaylists);
+            createNewPlaylistFromAdd.addEventListener('click', () => {
+                addToPlaylistModal.hide();
+                createPlaylistModal.show();
+
+                // Add these with your other event listeners
+
+            });
+
+            // Progress bar click handler
+            progressContainer.addEventListener('click', function (e) {
+                if (!audio.src || !isFinite(audio.duration)) return;
+
+                const rect = this.getBoundingClientRect();
+                const pos = (e.clientX - rect.left) / rect.width;
+                audio.currentTime = pos * audio.duration;
+                updatePlayerProgress();
+            });
+
+            // Player view swipe down to close
+            let startY = 0;
+            let moved = false;
+
+            playerView.addEventListener('touchstart', (e) => {
+                startY = e.touches[0].clientY;
+                moved = false;
+            });
+
+            playerView.addEventListener('touchmove', (e) => {
+                const y = e.touches[0].clientY;
+                if (y - startY > 50) { // Swipe down
+                    moved = true;
+                    closePlayerView();
+                }
+            });
+
+            playerView.addEventListener('touchend', (e) => {
+                if (moved) {
+                    e.preventDefault();
+                }
+            });
+
+            // Navigation
+            navItems.forEach(item => {
+                item.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const view = this.getAttribute('data-view');
+                    switchView(view);
+                });
+            });
+
+            // Add to playlist button handler
+            document.addEventListener('click', function (e) {
+                if (e.target.closest('.add-to-playlist-btn')) {
+                    const btn = e.target.closest('.add-to-playlist-btn');
+                    const index = btn.getAttribute('data-index');
+                    showAddToPlaylistModal(index);
+                }
+            });
+
+            // --- Core Functions ---
+            function switchView(view) {
+                currentView = view;
+
+                // Update active nav item
+                navItems.forEach(item => {
+                    item.classList.remove('active');
+                    if (item.getAttribute('data-view') === view) {
+                        item.classList.add('active');
+                    }
+                });
+
+                // Update title and show correct view
+                allSongsView.style.display = 'none';
+                likedSongsView.style.display = 'none';
+                playlistsView.style.display = 'none';
+                playlistDetailView.style.display = 'none';
+
+                switch (view) {
+                    case 'all-songs':
+                        currentViewTitle.textContent = 'Library';
+                        allSongsView.style.display = 'block';
+                        break;
+                    case 'liked-songs':
+                        currentViewTitle.textContent = 'Liked Songs';
+                        likedSongsView.style.display = 'block';
+                        displayLikedSongs();
+                        break;
+                    case 'playlists':
+                        currentViewTitle.textContent = 'Playlists';
+                        playlistsView.style.display = 'block';
+                        displayPlaylists();
+                        break;
+                }
+            }
+
+            async function handleFileSelect(event) {
+                const files = Array.from(event.target.files);
+                if (files.length === 0) return;
+
+                // Show loading state
+                emptyState.innerHTML = '<div class="loading-spinner"></div> <p>Loading songs...</p>';
+
+                // Process files
+                const newSongs = await Promise.all(files.map(async (file, index) => {
+                    const songId = `${Date.now()}-${index}`;
+                    const songData = {
+                        id: songId,
+                        file: file,
+                        name: cleanSongName(file.name),
+                        artist: 'Unknown Artist',
+                        duration: '--:--',
+                        liked: false,
+                        addedAt: new Date().getTime()
+                    };
+                    await storeSongInDB(songData);
+                    return songData;
+                }));
+
+                songs = [...songs, ...newSongs];
+                displaySongs();
+            }
+
+            function displaySongs(songArray = songs) {
+                if (songArray.length === 0) {
+                    emptyState.style.display = 'flex';
+                    songListEl.innerHTML = '';
+                    return;
+                }
+
+                emptyState.style.display = 'none';
+                songListEl.innerHTML = '';
+
+                // Sort by recently added first
+                const sortedSongs = [...songArray].sort((a, b) => b.addedAt - a.addedAt);
+
+                sortedSongs.forEach((song, index) => {
+                    const originalIndex = songs.findIndex(s => s.id === song.id);
+                    const isPlaying = currentSongIndex === originalIndex;
+
+                    const songElement = document.createElement("div");
+                    songElement.className = "song-item";
+                    songElement.innerHTML = `
+            <div class="song-number">${index + 1}</div>
+            <div class="song-info">
+                <div class="song-name">${song.name} ${isPlaying ? '<span class="now-playing-badge">Now Playing</span>' : ''}</div>
+                <div class="song-artist">${song.artist}</div>
+            </div>
+            <div class="song-duration">${song.duration}</div>
+            <div class="song-actions">
+                <button class="btn btn-link text-light p-0 add-to-playlist-btn" data-index="${originalIndex}">
+                    <i class="bi bi-plus"></i>
+                </button>
+                <button class="like-btn ${song.liked ? 'liked' : ''}" data-index="${originalIndex}">
+                    <i class="bi ${song.liked ? 'bi-heart-fill' : 'bi-heart'}"></i>
+                </button>
+            </div>`;
+
+                    songListEl.appendChild(songElement);
+
+                    // Event listeners
+                    songElement.addEventListener('click', () => playSong(originalIndex));
+                    songElement.querySelector('.like-btn').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        toggleLikeSong(originalIndex);
+                    });
+                });
+            }
+            function filterSongs() {
+                const query = searchInput.value.toLowerCase();
+                const filteredSongs = songs.filter(song =>
+                    song.name.toLowerCase().includes(query) ||
+                    song.artist.toLowerCase().includes(query)
+                );
+                displaySongs(filteredSongs);
+            }
+
+            function displayLikedSongs() {
+                likedSongs = songs.filter(song => song.liked);
+
+                if (likedSongs.length === 0) {
+                    emptyLikedState.style.display = 'flex';
+                    likedSongsListEl.innerHTML = '';
+                    return;
+                }
+
+                emptyLikedState.style.display = 'none';
+                likedSongsListEl.innerHTML = '';
+
+                likedSongs.forEach((song, index) => {
+                    const originalIndex = songs.findIndex(s => s.id === song.id);
+                    const isPlaying = currentSongIndex === originalIndex;
+
+                    const songElement = document.createElement("div");
+                    songElement.className = "song-item";
+                    songElement.innerHTML = `
+                        <div class="song-number">${index + 1}</div>
+                        <div class="song-info">
+                            <div class="song-name">${song.name} ${isPlaying ? '<span class="now-playing-badge">Now Playing</span>' : ''}</div>
+                            <div class="song-artist">${song.artist}</div>
+                        </div>
+                        <div class="song-duration">${song.duration}</div>
+                        <div class="song-actions">
+                            <button class="like-btn liked" data-index="${originalIndex}">
+                                <i class="bi bi-heart-fill"></i>
+                            </button>
+                        </div>`;
+
+                    likedSongsListEl.appendChild(songElement);
+
+                    // Add event listeners
+                    songElement.addEventListener('click', () => playSong(originalIndex));
+                    songElement.querySelector('.like-btn').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        toggleLikeSong(originalIndex);
+                    });
+                });
+            }
+
+            function displayPlaylists() {
+                if (playlists.length === 0) {
+                    emptyPlaylistsState.style.display = 'flex';
+                    playlistsList.innerHTML = '';
+                    return;
+                }
+
+                emptyPlaylistsState.style.display = 'none';
+                playlistsList.innerHTML = '';
+
+                playlists.forEach(playlist => {
+                    const playlistElement = document.createElement("div");
+                    playlistElement.className = "song-item";
+                    playlistElement.innerHTML = `
+                        <div class="song-info" style="flex: 1;">
+                            <div class="song-name">${playlist.name}</div>
+                            <div class="song-artist">${playlist.songs ? playlist.songs.length : 0} songs</div>
+                        </div>
+                        <div class="song-actions">
+                            <button class="btn btn-link text-light p-0">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>`;
+
+                    playlistsList.appendChild(playlistElement);
+
+                    // Add event listener
+                    playlistElement.addEventListener('click', () => {
+                        showPlaylistDetail(playlist);
+                    });
+                });
+            }
+
+            function showPlaylistDetail(playlist) {
+                currentPlaylist = playlist;
+                playlistsView.style.display = 'none';
+                playlistDetailView.style.display = 'block';
+                playlistDetailTitle.textContent = playlist.name;
+                displayPlaylistSongs();
+            }
+
+            function backToPlaylists() {
+                playlistDetailView.style.display = 'none';
+                playlistsView.style.display = 'block';
+                currentViewTitle.textContent = 'Playlists';
+            }
+
+            function displayPlaylistSongs() {
+                if (!currentPlaylist.songs || currentPlaylist.songs.length === 0) {
+                    emptyPlaylistState.style.display = 'flex';
+                    playlistSongsList.innerHTML = '';
+                    return;
+                }
+
+                emptyPlaylistState.style.display = 'none';
+                playlistSongsList.innerHTML = '';
+
+                currentPlaylist.songs.forEach((playlistSong, index) => {
+                    // Find the full song data from main songs array
+                    const fullSong = songs.find(s => s.id === playlistSong.id) || playlistSong;
+                    const isPlaying = currentSongIndex !== null && songs[currentSongIndex]?.id === playlistSong.id;
+
+                    const songElement = document.createElement("div");
+                    songElement.className = "song-item";
+                    songElement.innerHTML = `
+                        <div class="song-number">${index + 1}</div>
+                        <div class="song-info">
+                            <div class="song-name">${fullSong.name} ${isPlaying ? '<span class="now-playing-badge">Now Playing</span>' : ''}</div>
+                            <div class="song-artist">${fullSong.artist}</div>
+                        </div>
+                        <div class="song-duration">${fullSong.duration || '--:--'}</div>
+                        <div class="song-actions">
+                            <button class="btn btn-link text-danger p-0 remove-from-playlist-btn">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>`;
+
+                    playlistSongsList.appendChild(songElement);
+
+                    // Add click handler to play song
+                    songElement.querySelector('.song-info').addEventListener('click', () => {
+                        const mainIndex = songs.findIndex(s => s.id === playlistSong.id);
+                        if (mainIndex >= 0) {
+                            playSong(mainIndex);
+                        } else {
+                            // Handle case where song isn't in main library
+                            alert('Original song file not found in library');
+                        }
+                    });
+
+                    // Add click handler to remove from playlist
+                    songElement.querySelector('.remove-from-playlist-btn').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        removeFromPlaylist(index);
+                    });
+                });
+            }
+
+            function removeFromPlaylist(songIndexInPlaylist) {
+                if (!currentPlaylist.songs || songIndexInPlaylist >= currentPlaylist.songs.length) return;
+
+                currentPlaylist.songs.splice(songIndexInPlaylist, 1);
+
+                // Update in DB
+                addPlaylistToDB(currentPlaylist)
+                    .then(() => {
+                        displayPlaylistSongs();
+                        // Also update the playlists view count
+                        displayPlaylists();
+                    })
+                    .catch(error => {
+                        console.error('Error updating playlist:', error);
+                    });
+            }
+
+            function showAddToPlaylistModal(songIndex) {
+                currentSongForPlaylist = songs[songIndex];
+                updatePlaylistSelectionList();
+                addToPlaylistModal.show();
+            }
+
+            function updatePlaylistSelectionList() {
+                if (playlists.length === 0) {
+                    playlistSelectionList.innerHTML = '';
+                    noPlaylistsMessage.style.display = 'block';
+                    return;
+                }
+
+                noPlaylistsMessage.style.display = 'none';
+                playlistSelectionList.innerHTML = '';
+
+                playlists.forEach(playlist => {
+                    const isInPlaylist = playlist.songs && playlist.songs.some(s => s.id === currentSongForPlaylist.id);
+
+                    const playlistItem = document.createElement('div');
+                    playlistItem.className = 'song-item';
+                    playlistItem.innerHTML = `
+                        <div class="song-info" style="flex: 1;">
+                            <div class="song-name">${playlist.name}</div>
+                            <div class="song-artist">${playlist.songs ? playlist.songs.length : 0} songs</div>
+                        </div>
+                        <div class="song-actions">
+                            <button class="btn btn-link text-light p-0 ${isInPlaylist ? 'text-success' : ''}">
+                                <i class="bi ${isInPlaylist ? 'bi-check-circle-fill' : 'bi-plus-circle'}"></i>
+                            </button>
+                        </div>`;
+
+                    playlistItem.addEventListener('click', () => {
+                        toggleSongInPlaylist(playlist);
+                    });
+
+                    playlistSelectionList.appendChild(playlistItem);
+                });
+            }
+
+            function toggleSongInPlaylist(playlist) {
+                if (!playlist.songs) {
+                    playlist.songs = [];
+                }
+
+                const songIndex = playlist.songs.findIndex(s => s.id === currentSongForPlaylist.id);
+
+                if (songIndex === -1) {
+                    // Add to playlist
+                    playlist.songs.push({
+                        id: currentSongForPlaylist.id,
+                        name: currentSongForPlaylist.name,
+                        artist: currentSongForPlaylist.artist
+                    });
+                } else {
+                    // Remove from playlist
+                    playlist.songs.splice(songIndex, 1);
+                }
+
+                // Update in DB
+                addPlaylistToDB(playlist)
+                    .then(() => {
+                        updatePlaylistSelectionList();
+                        // If we're currently viewing playlists, update that view too
+                        if (currentView === 'playlists') {
+                            displayPlaylists();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error updating playlist:', error);
+                    });
+            }
+
+            function toggleLikeSong(index) {
+                songs[index].liked = !songs[index].liked;
+
+                // Update DB
+                storeSongInDB(songs[index]);
+
+                // Update the display
+                if (currentView === 'all-songs') {
+                    displaySongs();
+                } else if (currentView === 'liked-songs') {
+                    displayLikedSongs();
+                }
+
+                // If the currently playing song was liked/unliked, update the UI
+                if (currentSongIndex === index) {
+                    const likeBtns = document.querySelectorAll(`.like-btn[data-index="${index}"]`);
+                    likeBtns.forEach(btn => {
+                        btn.classList.toggle('liked');
+                        btn.innerHTML = `<i class="bi ${songs[index].liked ? 'bi-heart-fill' : 'bi-heart'}"></i>`;
+                    });
+                }
+            }
+            function toggleShuffle() {
+                isShuffled = !isShuffled;
+                shuffleBtn.classList.toggle('active', isShuffled);
+
+                if (isShuffled) {
+                    // Store original order
+                    originalSongOrder = [...songs];
+
+                    // Create shuffled copy (excluding current song)
+                    let songsToShuffle = [...songs];
+                    if (currentSongIndex !== null) {
+                        const currentSong = songsToShuffle.splice(currentSongIndex, 1)[0];
+                        songsToShuffle = shuffleArray(songsToShuffle);
+                        songsToShuffle.unshift(currentSong);
+                    } else {
+                        songsToShuffle = shuffleArray(songsToShuffle);
+                    }
+
+                    songs = songsToShuffle;
+                    currentSongIndex = 0; // Reset index since order changed
+                } else {
+                    // Restore original order
+                    if (originalSongOrder.length > 0) {
+                        songs = [...originalSongOrder];
+                        if (currentSongIndex !== null) {
+                            // Find the current song in the original order
+                            const currentSongId = songs[currentSongIndex].id;
+                            currentSongIndex = originalSongOrder.findIndex(s => s.id === currentSongId);
+                        }
+                    }
+                }
+
+                // Update the display
+                if (currentView === 'all-songs') {
+                    displaySongs();
+                }
+            }
+
+            function toggleRepeat() {
+                isRepeatOn = !isRepeatOn;
+                repeatBtn.classList.toggle('active', isRepeatOn);
+
+                if (isRepeatOn) {
+                    audio.loop = true;
+                } else {
+                    audio.loop = false;
+                }
+            }
+
+            // Helper function to shuffle an array
+            function shuffleArray(array) {
+                const newArray = [...array];
+                for (let i = newArray.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+                }
+                return newArray;
+            }
+            function playSong(index) {
+                if (index < 0 || index >= songs.length) return;
+
+                const song = songs[index];
+                currentSongIndex = index;
+
+                // Update now playing bar
+                nowPlayingTitle.textContent = song.name;
+                nowPlayingArtist.textContent = song.artist || 'Unknown Artist';
+                nowPlayingBar.style.display = 'flex';
+
+                // Update player view
+                playerSongTitle.textContent = song.name;
+                playerSongArtist.textContent = song.artist || 'Unknown Artist';
+                
+
+                // Play the song
+                if (audio.src) {
+                    URL.revokeObjectURL(audio.src); // Clean up previous URL
+                }
+
+                getSongFromDB(song.id).then(songData => {
+                    if (songData && songData.file) {
+                        audio.src = URL.createObjectURL(songData.file);
+                        audio.play().then(() => {
+                            isPlaying = true;
+                            updatePlaybackUI();
+                            startProgressTracking();
+
+                            // Update duration when metadata is loaded
+                            audio.addEventListener('loadedmetadata', () => {
+                                durationEl.textContent = formatTime(audio.duration);
+                            });
+                        }).catch(error => {
+                            console.error("Playback failed:", error);
+                        });
+                    }
+                });
+            }
+
+            function togglePlayPause() {
+                if (!audio.src) return;
+
+                if (isPlaying) {
+                    audio.pause();
+                    clearInterval(progressInterval);
+                } else {
+                    audio.play();
+                    startProgressTracking();
+                }
+                isPlaying = !isPlaying;
+                updatePlaybackUI();
+            }
+
+            function playPrevious() {
+                if (songs.length === 0) return;
+
+                let newIndex = currentSongIndex - 1;
+                if (newIndex < 0) newIndex = songs.length - 1;
+                playSong(newIndex);
+            }
+
+            function playNext() {
+                if (songs.length === 0) return;
+
+                let newIndex = currentSongIndex + 1;
+                if (newIndex >= songs.length) newIndex = 0;
+                playSong(newIndex);
+            }
+
+            function updatePlaybackUI() {
+                const playIcon = isPlaying ? 'bi-pause-fill' : 'bi-play-fill';
+                playPauseBtn.innerHTML = `<i class="bi ${playIcon}" style="font-size: 1.5rem;"></i>`;
+                mainPlayBtn.innerHTML = `<i class="bi ${playIcon}"></i>`;
+            }
+
+            function startProgressTracking() {
+                clearInterval(progressInterval);
+
+                // Update time immediately
+                updatePlayerProgress();
+
+                // Then update every second
+                progressInterval = setInterval(updatePlayerProgress, 1000);
+            }
+
+            function updatePlayerProgress() {
+                if (!isFinite(audio.duration)) return;
+
+                const currentTime = audio.currentTime;
+                const duration = audio.duration;
+                const progressPercent = (currentTime / duration) * 100;
+
+                // Update progress bar
+                progressBar.style.width = `${progressPercent}%`;
+
+                // Update time labels
+                currentTimeEl.textContent = formatTime(currentTime);
+                durationEl.textContent = formatTime(duration);
+            }
+
+            function formatTime(seconds) {
+                const minutes = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+            }
+
+            function openPlayerView() {
+                playerView.style.display = 'flex';
+                setTimeout(() => {
+                    playerView.classList.add('show');
+                }, 10);
+            }
+
+            function closePlayerView() {
+                playerView.classList.remove('show');
+                setTimeout(() => {
+                    playerView.style.display = 'none';
+                }, 300);
+            }
+
+            function createNewPlaylist() {
+                const name = playlistNameInput.value.trim();
+                if (!name) return;
+
+                const newPlaylist = {
+                    id: `playlist-${Date.now()}`,
+                    name: name,
+                    songs: [],
+                    createdAt: new Date().getTime()
+                };
+
+                // Add to DB
+                addPlaylistToDB(newPlaylist)
+                    .then(() => {
+                        playlists.push(newPlaylist);
+                        displayPlaylists();
+                        createPlaylistModal.hide();
+                        playlistNameInput.value = '';
+                    })
+                    .catch(error => {
+                        console.error('Error creating playlist:', error);
+                    });
+            }
+
+            // --- DB Functions ---
+            function storeSongInDB(songData) {
+                return new Promise((resolve, reject) => {
+                    if (!db) { reject("DB not initialized"); return; }
+                    const transaction = db.transaction([STORE_NAME], 'readwrite');
+                    const store = transaction.objectStore(STORE_NAME);
+                    const request = store.put(songData);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            }
+
+            function getSongFromDB(id) {
+                return new Promise((resolve, reject) => {
+                    if (!db) { reject("DB not initialized"); return; }
+                    const transaction = db.transaction([STORE_NAME], 'readonly');
+                    const store = transaction.objectStore(STORE_NAME);
+                    const request = store.get(id);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            }
+
+            function addPlaylistToDB(playlist) {
+                return new Promise((resolve, reject) => {
+                    if (!db) { reject("DB not initialized"); return; }
+                    const transaction = db.transaction([PLAYLIST_STORE], 'readwrite');
+                    const store = transaction.objectStore(PLAYLIST_STORE);
+                    const request = store.put(playlist);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            }
+
+            function loadSongsFromDB() {
+                return new Promise((resolve, reject) => {
+                    if (!db) { reject("DB not initialized"); return; }
+                    const transaction = db.transaction([STORE_NAME], 'readonly');
+                    const store = transaction.objectStore(STORE_NAME);
+                    const request = store.getAll();
+                    request.onsuccess = () => {
+                        songs = request.result || [];
+                        displaySongs();
+                        resolve(songs);
+                    };
+                    request.onerror = () => reject(request.error);
+                });
+            }
+
+            function loadPlaylistsFromDB() {
+                return new Promise((resolve, reject) => {
+                    if (!db) { reject("DB not initialized"); return; }
+                    const transaction = db.transaction([PLAYLIST_STORE], 'readonly');
+                    const store = transaction.objectStore(PLAYLIST_STORE);
+                    const request = store.getAll();
+                    request.onsuccess = () => {
+                        playlists = request.result || [];
+                        displayPlaylists();
+                        resolve(playlists);
+                    };
+                    request.onerror = () => reject(request.error);
+                });
+            }
+
+            // --- Audio Event Listeners ---
+            audio.addEventListener('play', () => {
+                isPlaying = true;
+                updatePlaybackUI();
+            });
+
+            audio.addEventListener('pause', () => {
+                isPlaying = false;
+                updatePlaybackUI();
+            });
+
+            audio.addEventListener('ended', () => {
+                if (!isRepeatOn) {
+                    playNext();
+                } else {
+                    audio.currentTime = 0;
+                    audio.play();
+                }
+            });
+
+            audio.addEventListener('timeupdate', updatePlayerProgress);
+
+            // --- Utility Functions ---
+            function cleanSongName(filename) {
+                return filename.replace(/\.[^/.]+$/, "")
+                    .replace(/_/g, " ")
+                    .replace(/-/g, " ")
+                    .trim();
+            }
+        });
+    </script>
+</body>
+
+</html>
